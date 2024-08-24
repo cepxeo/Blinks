@@ -24,6 +24,6 @@
         "/exclude-this-path",
         "/another-exclude-path"
     ],
-    "BurpPath": "",
-    "jythonPath": ""
+    "BurpPath": "burpsuite_pro_v2024.6.6.jar",
+    "jythonPath": "jython-standalone-2.7.4-javadoc.jar"
 }
