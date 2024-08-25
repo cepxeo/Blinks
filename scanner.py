@@ -417,17 +417,17 @@ class BurpExtender(IBurpExtender, IScannerListener, IHttpListener, IScanQueueIte
 
         try:
             issue_details = {
-                "issue_name": str(issue.getIssueName()),
-                "severity": str(issue.getSeverity()),
-                "confidence": str(issue.getConfidence()),
-                "url": str(issue.getUrl()),
-                "issue_detail": issue.getIssueDetail() and str(issue.getIssueDetail()),
-                "issue_background": issue.getIssueBackground() and str(issue.getIssueBackground()),
-                "remediation_detail": issue.getRemediationDetail() and str(issue.getRemediationDetail()),
-                "remediation_background": issue.getRemediationBackground() and str(issue.getRemediationBackground()),
-                "host": str(issue.getHttpMessages()[0].getHttpService().getHost()),
-                "port": issue.getHttpMessages()[0].getHttpService().getPort(),
-                "protocol": "https" if issue.getHttpMessages()[0].getHttpService().getProtocol() else "http"
+                "issue_name": str(issue.getIssueName() if issue.getIssueName() else ""),
+                "severity": str(issue.getSeverity() if issue.getSeverity() else ""),
+                "confidence": str(issue.getConfidence() if issue.getConfidence() else ""),
+                "url": str(issue.getUrl() if issue.getUrl() else ""),
+                "issue_detail": str(issue.getIssueDetail() if issue.getIssueDetail() else ""),
+                "issue_background": str(issue.getIssueBackground() if issue.getIssueBackground() else ""),
+                "remediation_detail": str(issue.getRemediationDetail() if issue.getRemediationDetail() else ""),
+                "remediation_background": str(issue.getRemediationBackground() if issue.getRemediationBackground() else ""),
+                "host": str(issue.getHttpMessages()[0].getHttpService().getHost() if issue.getHttpMessages() else ""),
+                "port": issue.getHttpMessages()[0].getHttpService().getPort() if issue.getHttpMessages() else 0,
+                "protocol": "https" if issue.getHttpMessages() and issue.getHttpMessages()[0].getHttpService().getProtocol() else "http"
             }
 
             for i, http_message in enumerate(issue.getHttpMessages()):
@@ -450,7 +450,6 @@ class BurpExtender(IBurpExtender, IScannerListener, IHttpListener, IScanQueueIte
             self.send_issue_to_webhook(json_data)
             self.report_file = "{}/reports/SCAN_PENDING_issues_report_{}.{}".format(self.current_dir,self.report_name,self.reporttype)
             self.generate_report(self.reporttype, self.report_file)    
-
 
         except Exception as e:
             self.log_message("ERROR: Error processing issue details: {}".format(str(e)), error=True)
