@@ -10,6 +10,25 @@ import time
 import re,os
 import json
 
+def remove_duplicate_lines(input_string):
+    # Split the input string into lines
+    lines = input_string.split('\n')
+    
+    # Create an empty set to keep track of unique lines
+    unique_lines = []
+    
+    # Iterate over the lines and add only non-duplicates to the list
+    seen_lines = set()
+    for line in lines:
+        if line not in seen_lines:
+            unique_lines.append(line)
+            seen_lines.add(line)
+    
+    # Join the unique lines back into a string
+    output_string = '\n'.join(unique_lines)
+    
+    return output_string
+
 class BurpExtender(IBurpExtender, IScannerListener, IHttpListener, IScanQueueItem):
 
     isActiveScanActive = False  
@@ -109,7 +128,8 @@ class BurpExtender(IBurpExtender, IScannerListener, IHttpListener, IScanQueueIte
                                 for line in request_lines[1:body_start]:
                                     if ': ' in line:
                                         key, value = line.split(': ', 1)
-                                        headers[key.lower()] = value
+                                        if key not in headers:
+                                            headers[key.lower()] = value
 
                                 content_type = headers.get("content-type", "")
 
@@ -316,11 +336,12 @@ class BurpExtender(IBurpExtender, IScannerListener, IHttpListener, IScanQueueIte
                     self.save_and_scan_request(messageInfo)
             else:
                 self.log_message("Ignoring message with toolFlag: {}, messageIsRequest: {}".format(toolFlag, messageIsRequest))
-
+  
     def save_and_scan_request(self, messageInfo):
         try:
             request = self._helpers.bytesToString(messageInfo.getRequest())
             with open(self.crawled_requests_file, "a") as f:
+                request = remove_duplicate_lines(request)
                 f.write(request + "\n===\n")
         except Exception as e:
             self.log_message("Error saving and scanning request: {}".format(str(e)), error=True)
