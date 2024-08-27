@@ -4,6 +4,10 @@ import httpx
 import subprocess
 import argparse
 
+import requests
+from requests.exceptions import RequestException
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
 current_path = os.getcwd()
 new_target_file_path = os.path.join(current_path, 'new_target.txt')
 config_file_path = os.path.join(current_path, 'config.json')
@@ -66,13 +70,26 @@ def read_urls(file_path):
         return [line.strip() for line in file if line.strip()]
 
 def is_url_alive(url):
-    if not url.startswith(('http://', 'https://')):
-        url = 'http://' + url 
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     try:
-        response = httpx.get(url, timeout=5)
-        return response.status_code
-    except httpx.RequestError:
-        return False
+        response = requests.get(url, verify=False, timeout=20)
+        if response.status_code < 500:
+            return True
+        else:
+            print(f"[*] {url} error {response.status_code}")
+            return False
+    except RequestException as e:
+        # Second try
+        try:
+            response = requests.head(url, verify=False, timeout=20)
+            if response.status_code < 500:
+                return True
+            else:
+                print(f"[*] {url} error {response.status_code}")
+                return False
+        except RequestException as e:
+            print(f"[*] {url} error {e}")
+            return False
 
 def write_alive_urls(file_path, urls):
     with open(file_path, 'w') as file:
